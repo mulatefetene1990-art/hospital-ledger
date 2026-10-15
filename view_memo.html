@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Official Memorandum — {{ serial_code }}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{--accent:#003366;--muted:#657482;--page-bg:#f0f2f6;--paper-white:#ffffff}
+    html,body{height:100%;margin:0;background:var(--page-bg);font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+    .wrap{max-width:860px;margin:28px auto;padding:18px}
+    .action-bar{display:flex;justify-content:flex-end;gap:10px;margin-bottom:12px}
+    .btn{padding:8px 14px;border-radius:6px;border:0;font-weight:700;cursor:pointer}
+    .btn-back{background:#6b7280;color:#fff}
+    .btn-print{background:var(--accent);color:#fff}
+    .paper{background:var(--paper-white);padding:34px 44px;border-radius:4px;box-shadow:0 6px 24px rgba(2,6,23,0.08);position:relative}
+    .header-row{display:flex;align-items:center;justify-content:space-between;border-bottom:3px double var(--accent);padding-bottom:14px;margin-bottom:18px}
+    .logo{width:88px;height:88px;object-fit:contain}
+    .center-header{text-align:center;flex:1}
+    .center-header .small-text{font-size:12px;color:var(--muted);font-weight:700}
+    .center-header .title{font-size:18px;color:var(--accent);font-weight:900;letter-spacing:1px;margin-top:6px}
+    .meta-grid{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:18px;align-items:start}
+    .meta-left{display:grid;grid-template-columns:90px 1fr;gap:8px 12px}
+    .label{font-weight:800;color:#1f2937;font-size:12px;letter-spacing:0.6px}
+    .value{font-size:14px;color:#111}
+    .meta-right{text-align:right;font-size:13px;color:#111}
+    .hr{height:1px;background:linear-gradient(90deg,var(--accent),transparent);margin:22px 0}
+    .body-ruled { position: relative; padding-bottom: 18px; margin-bottom: 18px; }
+    .ruled-line { width: 100%; height: 0; border-bottom: 1px dashed #c7d2da; margin-top: 18px; }
+    
+    .body, .memo-body {
+      min-height:240px;
+      font-size:14.2px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-wrap: break-word;
+      hyphens: auto;
+      word-break: break-word;
+      word-break: break-all;
+      color:#111;
+      line-height:1.6;
+    }
+    .signature-row{display:flex;justify-content:flex-end;align-items:center;margin-top:45px;gap:25px}
+    .signature-block{width:340px;text-align:center;position:relative}
+    .signature-name{font-weight:800;font-size:14px;color:#111;letter-spacing:0.5px}
+    .signature-sub{font-size:12.5px;font-weight:800;margin-top:4px;text-transform:uppercase;border-top:1px solid #e5e7eb;padding-top:4px}
+    .stamp{width:95px;height:95px;object-fit:contain;z-index:10;position:absolute}
+    .cc-footer{margin-top:36px;border-top:1px dashed #e5e7eb;padding-top:14px;color:var(--muted);font-size:12px}
+    .footer-note{margin-top:24px;font-size:11px;color:#9aa1ab;text-align:center}
+    .attn { margin-top:6px; font-size:13px; font-weight:700; color:#111; }
+    .attn-list { margin-top:6px; font-size:13px; color:#111; }
+    .attn-list div { margin-bottom:2px; }
+    
+    @media print{
+      body{background:white}
+      .wrap{margin:0;padding:0}
+      .action-bar{display:none}
+      .paper{box-shadow:none;border-radius:0;padding:28px 36px}
+    }
+	    /* 🎯 FIXED: Added text-indent to tuck in the very first line of the main body paragraph */
+    .body, .memo-body {
+      min-height:240px;
+      font-size:14.2px;
+      text-indent: 30px;               /* 🎯 Tucks the first line inward cleanly */
+      white-space: pre-wrap;           /* preserve newlines but allow wrapping */
+      overflow-wrap: anywhere;         /* modern, forces break when needed */
+      word-wrap: break-word;           /* legacy name */
+      hyphens: auto;                   /* allow hyphenation where supported */
+      word-break: break-word;          /* non-standard but supported in some engines */
+      word-break: break-all;
+      color:#111;
+      line-height:1.6;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="action-bar no-print" role="toolbar" aria-label="Actions">
+       <a href="/" class="btn btn-back">← Back to Dashboard</a>
+      <button class="btn btn-print" onclick="window.print()">Print / Save PDF</button>
+    </div>
+
+    <article class="paper" role="document" aria-label="Official memorandum">
+      <div class="header-row">
+        <div style="width:100px">
+          <img src="{{ url_for('static', filename='logo_left.png') }}" alt="left logo" class="logo" onerror="this.style.display='none'">
+        </div>
+
+        <div class="center-header">
+          <div class="title">በአዲስ  አበባ  ከተማ  አስተዳደር ጤና ቢሮ በአራዳ ክ/ከተማ ጤና ጽ/ቤት</div>
+          <div class="title">Addis Ababa City Administration Health Bureau</div>
+		   <div class="title">Arada Sub-City Health Office</div>
+		    <div class="title">ሰሜን ጤና ጣቢያ</div>
+          <div class="title">SEMEN HEALTH CENTER</div>
+          </div>
+
+        <div style="width:100px; text-align:right">
+          <img src="{{ url_for('static', filename='logo_right.png') }}" alt="right logo" class="logo" onerror="this.style.display='none'">
+        </div>
+      </div>
+
+      {% set user_role = session.get('role') %}
+      {% set cc_csv = memo['cc_list'] or '' %}
+      {% set cc_ns = namespace(items=[]) %}
+      {% for c in cc_csv.split(',') %}
+        {% if c.strip() %}{% set _ = cc_ns.items.append(c.strip()) %}{% endif %}
+      {% endfor %}
+      {% if user_role and cc_ns.items and (user_role in cc_ns.items) %}
+        <div class="no-print" style="background-color:#eef4f8;border-left:4px solid #003366;padding:12px;margin-bottom:20px;font-size:13px;font-weight:700;color:#003366;">
+          ℹ️ Carbon Copy (CC) Routing: Your department has been pinned to this ledger transmission instance for strategic structural reference.
+        </div>
+      {% endif %}
+
+          <!-- 🎯 FIXED UNIFORM METADATA ASSEMBLY MATRIX (PERFECT ALIGNMENT & EQUAL SPACING) -->
+      <div class="meta-grid" style="display: grid; grid-template-columns: 1fr 220px; gap: 16px; margin-top: 24px; align-items: start;">
+        
+        <!-- LEFT SYSTEM FIELD PORTAL: Structured via explicit uniform grid rows -->
+        <div class="meta-left" style="display: grid; grid-template-columns: 110px 1fr; gap: 14px 0px; align-items: start; line-height: 1.5;">
+          
+          <!-- ROW 1: FROM SECTION -->
+          <div class="label" style="font-weight: 800; color: #1f2937; font-size: 13px; letter-spacing: 0.8px; padding-top: 1px;">FROM:</div>
+          <div class="value" style="font-size: 14.5px; color: #111; font-weight: 500;">
+            {% if memo['origin_department'] in departments %}
+              {{ departments[memo['origin_department']].name }} ({{ memo['origin_department'] }})
+            {% else %}
+              {{ memo['origin_department'] }}
+            {% endif %}
+          </div>
+
+          <!-- ROW 2: TO SECTION -->
+                  <!-- 🎯 FIXED: MULTI-LINE PERSONNEL NAMES CONVERTED INTO INDIVIDUAL BULLETED ROWS -->
+            <!-- 🎯 FIXED: PERSONNEL NAMES CONVERTED AUTOMATICALLY INTO PURE CAPITAL LETTERS -->
+          <div class="label" style="font-weight: 800; color: #1f2937; font-size: 13px; letter-spacing: 0.8px; padding-top: 1px;">TO:</div>
+          <div class="value" style="font-size: 14.5px; color: #111;">
+            {% set pers_csv = memo['recipient_personnel'] or '' %}
+            {% set pers_ns = namespace(items=[]) %}
+            {% if pers_csv %}
+              {% set pers_norm = pers_csv.replace('\r','').replace('\n',',') %}
+              {% for p in pers_norm.split(',') %}
+                {% if p.strip() %}{% set _ = pers_ns.items.append(p.strip()) %}{% endif %}
+              {% endfor %}
+            {% endif %}
+
+            {% if memo['recipient'] == 'PERS' and pers_ns.items %}
+              <!-- 🎯 VERTICAL ROW STACK WITH AUTOMATIC CAPITAL LETTER FILTER -->
+              <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 2px;">
+                {% for name in pers_ns.items %}
+                  <!-- 🎯 CAPITAL LETTERS TRANSFORMATION: Uses |upper filter to capitalize name characters dynamically -->
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 500; color: #111;">
+                    <span style="font-size: 11px; color: #4b5563; user-select: none; font-weight: normal;">❖</span>
+                    <div style="font-size: 14.5px; font-weight: 500; color: #111;">{{ name|upper }}</div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <strong style="font-weight: 700;">
+                {% if memo['recipient'] in departments %}
+                  {{ departments[memo['recipient']].name }} ({{ memo['recipient'] }})
+                {% else %}
+                  {{ memo['recipient'] }}
+                {% endif %}
+              </strong>
+
+              {% if pers_ns.items %}
+                <div class="attn" style="margin-top: 6px; font-size: 12.5px; font-weight: 800; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px;">Attn:</div>
+                <div class="attn-list" style="margin-top: 4px; display: flex; flex-direction: column; gap: 5px;">
+                  {% for name in pers_ns.items %}
+                    <!-- 🎯 CAPITAL LETTERS TRANSFORMATION FOR ATTN ROSTER LISTS AS WELL -->
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 500; color: #111;">
+                      <span style="font-size: 11px; color: #6b7280; user-select: none; font-weight: normal;">❖</span>
+                      <div style="font-size: 14.5px; font-weight: 500; color: #111;">{{ name|upper }}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endif %}
+          </div>
+
+
+
+
+          <!-- ROW 3: SUBJECT SECTION -->
+          <div class="label" style="font-weight: 800; color: #1f2937; font-size: 13px; letter-spacing: 0.8px; padding-top: 1px;">SUBJECT:</div>
+          <div class="value" style="font-size: 14.5px; font-weight: 700; color: #003366;">{{ memo['subject'] }}</div>
+          
+        </div>
+
+        <!-- RIGHT TRACE INDEX PORTAL: Reference Code and Timestamps -->
+       <div class="meta-right" style="text-align: right; font-size: 13.5px; color: #111; line-height: 1.5; padding-left: 20px; border-left: 1px dashed #e5e7eb;">
+    <div style="font-weight: 800; font-size: 14px;">REF: <span style="font-weight: 700; color: #003366; font-family: monospace;">{{ serial_code }}</span></div>
+    <div style="margin-top: 10px;">
+        <div style="color: #4b5563; font-size: 11px;">📅 GREGORIAN:</div>
+        <div style="color: #111; font-weight: bold;">{{ memo['issue_date'] }}</div>
+    </div>
+    <div style="margin-top: 8px;">
+        <div style="color: #4b5563; font-size: 11px;">📅 ETHIOPIAN:</div>
+        <div style="color: #003366; font-weight: bold;">{{ memo['issue_date']|to_ethiopian }}</div>
+    </div>
+</div>
+      </div>
+
+
+      <div class="hr" role="separator" aria-hidden="true"></div>
+
+    <div class="body-ruled">
+        <div class="body" id="memoBody">{{ memo['body'] }}</div>
+        <!-- 🎯 REMOVED: The thin dashed ruled-line was cleared from here to keep your layout completely clean -->
+      </div>
+
+           <!-- 🎯 COMPLETE DUAL-STAMP APPARATUS (DUPLICATE TEXT LABELS REMOVED) -->
+      {% set dept_code = memo['origin_department']|upper|trim %}
+      
+      <!-- Dynamic color and theme profile definitions switcher assignment based on department codes -->
+      {% if dept_code == 'QA' %}
+          {% set theme_color = '#003366' %}
+      {% elif dept_code in ['RR', 'RECORD', 'RECORD_ROOM'] %}
+          {% set theme_color = '#b91c1c' %}
+      {% elif dept_code == 'CEO' %}
+          {% set theme_color = '#111827' %}
+      {% elif dept_code == 'HR' %}
+          {% set theme_color = '#0284c7' %}
+      {% elif dept_code == 'FIN' %}
+          {% set theme_color = '#16a34a' %}
+      {% else %}
+          {% set theme_color = '#4b5563' %}
+      {% endif %}
+
+      <div class="signature-row" style="display: flex; justify-content: flex-end; align-items: center; margin-top: 40px; gap: 15px;">
+        
+        <!-- SIGNATURE TEXT CONTAINER AREA -->
+        <div class="signature-block" style="width: 320px; text-align: center; position: relative;">
+          <div style="height: 5px;"></div>
+          <div class="signature-name" style="font-weight: 800; font-size: 14px; color: #111; letter-spacing: 0.5px;">{{ memo['signature_name'] }}</div>
+          
+          <!-- 🎯 NO MORE DUPLICATES: This single line displays your validation text perfectly once -->
+          <div class="signature-sub" style="font-size: 12.5px; color: #1f2937; font-weight: 800; margin-top: 4px; text-transform: uppercase; border-top: 1px solid #e5e7eb; padding-top: 4px;">
+            Verified &amp; Validated by: <span style="color: {{ theme_color }};">{{ dept_code }}</span> / <span style="color: #b91c1c;">RR</span>
+          </div>
+          
+          <!-- Your clean digital lock identifier maps cleanly right below the single text line -->
+          <div style="font-size: 9px; font-family: monospace; color: #9ca3af; margin-top: 2px;">
+            DIGITAL LOCK ID: SHC-{{ serial_code.split('-')[-1] if '-' in serial_code else 'SECURE' }}
+          </div>
+        </div>
+
+        <!-- CLOSED SPACE STAMP APPARATUS -->
+        <div style="display: flex; margin: 0; padding: 0; align-items: center; justify-content: center; position: relative;">
+          
+          <!-- STAMP 1: Origin Department Image (Brought to the front layer) -->
+          <div style="position: relative; width: 95px; height: 95px; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; z-index: 10;">
+            {% if memo['origin_department'] in departments and departments[memo['origin_department']].stamp_file %}
+              <img id="primary_institutional_stamp_image" 
+                   src="{{ url_for('static', filename=departments[memo['origin_department']].stamp_file) }}" 
+                   alt="Origin Department verification stamp" 
+                   style="width: 95px; height: 95px; object-fit: contain; margin: 0; padding: 0;"
+                   onerror="handleMissingStampImage(this, '{{ theme_color }}', '{{ dept_code }}')">
+            {% else %}
+                 <div style="width: 85px; height: 85px; border: 3px double {{ theme_color }}; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; font-size: 9px; color: {{ theme_color }}; transform: rotate(-8deg); background: rgba(255,255,255,0.9); line-height: 1.2; margin: 0; padding: 0;">
+                     <span style="font-size: 7px;">SEMEN H.C.</span>
+                     <span style="font-size: 10px; border-top: 1px solid {{ theme_color }}; border-bottom: 1px solid {{ theme_color }}; margin: 2px 0; padding: 0 4px;">★ {{ dept_code }} ★</span>
+                     <span style="font-size: 7px;">PASSED</span>
+                 </div>
+            {% endif %}
+          </div>
+
+          <!-- STAMP 2: Record Room Image (Tucked tightly underneath with a negative left margin) -->
+          <div style="position: relative; width: 95px; height: 95px; display: flex; align-items: center; justify-content: center; margin: 0; margin-left: -25px; padding: 0; z-index: 5;">
+             <img src="{{ url_for('static', filename='stamp_rr.png') }}" 
+                  alt="Final Record Room stamp" 
+                  style="width: 95px; height: 95px; object-fit: contain; margin: 0; padding: 0;"
+                  onerror="handleMissingStampImage(this, '#b91c1c', 'RR')">
+          </div>
+          
+        </div>
+      </div>
+
+
+      <!-- 🎯 COMPLETE VERTICAL ROW CC ENGINE HOOKED NATIVELY TO REAL-TIME SIGNATURE HISTORY -->
+      {% if memo['cc_list'] %}
+        <div class="cc-footer" style="margin-top: 36px; border-top: 1px dashed #e5e7eb; padding-top: 14px; font-size: 12px; color: var(--muted); line-height: 1.8;">
+          <strong style="color: #1f2937; display: block; margin-bottom: 8px; font-size: 12.5px;">CC Distribution Log:</strong>
+          
+          {# Clean string splitting filter converts historical database signatures into searchable arrays #}
+          {% set read_history_string = memo['viewed_cc_departments'] or '' %}
+          {% set read_history_list = read_history_string.upper().replace(' ', '').split(',') %}
+          
+          {% for member in memo['cc_list'].split(',') %}
+            {% if member.strip() %}
+              {% set current_member_code = member.strip().upper() %}
+              
+              <div class="cc-member-row" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; margin-bottom: 6px; border: 1px solid #f3f4f6; background-color: #fafafa; border-radius: 4px; font-weight: bold; color: #374151; width: fit-content;">
+                
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <span style="font-size: 13px; color: #4b5563; font-weight: normal; user-select: none;">❖</span> 
+                  <span style="color: #003366; font-weight: 700;">{{ current_member_code }}</span>
+                </div>
+                
+                <!-- 🎯 THE AUTOMATED STATE SWITCH MATRIX CONTAINER -->
+                {% if current_member_code in read_history_list %}
+                  <!-- This individual row shifts to green the instant this department opens the view route! -->
+                  <div style="font-size: 10px; font-weight: 800; color: #16a34a; background-color: #dcfce7; padding: 1px 6px; border-radius: 3px; border: 1px solid #bbf7d0; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1.2;">
+                    Received
+                  </div>
+                {% else %}
+                  <!-- Renders until a view transaction event is recorded on disk for this department -->
+                  <div style="font-size: 10px; font-weight: 800; color: #ea580c; background-color: #ffedd5; padding: 1px 6px; border-radius: 3px; border: 1px solid #fed7aa; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1.2;">
+                    ⏳ PENDING
+                  </div>
+                {% endif %}
+                
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+
+
+         <!-- 🎯 HIGH-LEGIBILITY SHADED INSTITUTIONAL FOOTER ASSEMBLY CARDS -->
+      <footer class="footer-note" style="margin-top: 40px; border-top: 1px dashed #c7d2da; padding-top: 20px;">
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 18px 24px; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+          
+		  <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; font-family: monospace; font-size: 12.5px; font-weight: 800; color: #1e293b; letter-spacing: 1px;">
+            📞 <span style="background-color: #e2e8f0; padding: 2px 6px; border-radius: 3px;">0118698747</span> / 
+            <span style="background-color: #e2e8f0; padding: 2px 6px; border-radius: 3px;">0111580752</span> / 
+            <span style="background-color: #e2e8f0; padding: 2px 6px; border-radius: 3px;">110053</span>
+          </div>
+          <!-- LINE 1: AMHARIC AND ENGLISH CENTRAL HOSPITAL SLOGANS -->
+          <div style="font-size: 11px; font-weight: 800; color: #003366; letter-spacing: 0.5px; margin-bottom: 4px;">
+            ፍትህዊና ጥራቱን የጠበቀ የጤና አገልግሎት ለሁሉም
+          </div>
+          <div style="font-size: 11px; font-weight: 700; color: #475569; letter-spacing: 0.3px; margin-bottom: 12px; text-transform: uppercase;">
+            Quality and Equitable Health Service For All
+          </div>
+
+          <!-- LINE 2: THE AMHARIC AND ENGLISH OFFICIAL COMPLIANCE REFERENCING GUIDELINES -->
+          <div style="font-size: 11.5px; font-weight: 600; color: #64748b; font-style: italic; margin-bottom: 2px;">
+            መልስ ሲጽፉልን የኛን ደብዳቤ ቁጥርና ቀን ይጥቀሱ
+          </div>
+          <div style="font-size: 11px; font-weight: 600; color: #64748b; font-style: italic; margin-bottom: 12px; letter-spacing: 0.2px;">
+            In Replying Please Mention Our Reference Number and Date
+          </div>
+
+          <!-- LINE 3: DIRECT TELEPHONY CONTACT ROUTING NUMERICAL ARRAY -->
+         
+        </div>
+      </footer>
+
+    </article>
+  </div>
+
+  <!-- 🎯 ACCELERATED IMAGE ERROR SHIELD FIXED SCRIPT -->
+  <script>
+    /**
+     * 🎯 ACCELERATED IMAGE ERROR SHIELD:
+     * If a png file name is missing inside your computer folders, this script intercepts
+     * the 404 network block and draws an identical high-contrast round seal on your print sheets!
+     */
+    function handleMissingStampImage(imageElement, fallbackColor, departmentToken) {
+        console.warn("⚠️ Stamp image resource file missing in static/ root directory path for: " + departmentToken);
+        
+        const backupStampContainer = document.createElement('div');
+        backupStampContainer.style.width = "85px";
+        backupStampContainer.style.height = "85px";
+        backupStampContainer.style.border = "3px double " + fallbackColor;
+        backupStampContainer.style.borderRadius = "50%";
+        backupStampContainer.style.display = "flex";
+        backupStampContainer.style.flexDirection = "column";
+        backupStampContainer.style.justifyContent = "center";
+        backupStampContainer.style.alignItems = "center";
+        backupStampContainer.style.textAlign = "center";
+        backupStampContainer.style.fontFamily = "'Courier New', monospace";
+        backupStampContainer.style.fontWeight = "bold";
+        backupStampContainer.style.fontSize = "9px";
+        backupStampContainer.style.color = fallbackColor;
+        backupStampContainer.style.transform = "rotate(-8deg)";
+        backupStampContainer.style.background = "rgba(255,255,255,0.9)";
+        backupStampContainer.style.lineHeight = "1.2";
+        
+        // 🎯 FIXED: Secured the dynamic layout variables strings inside proper structural backticks
+        backupStampContainer.innerHTML = `
+            <span style="font-size: 8px;">SEMEN H.C.</span>
+            <span style="font-size: 10px; border-top: 1px solid ${fallbackColor}; border-bottom: 1px solid ${fallbackColor}; margin: 2px 0; padding: 0 4px; letter-spacing: 0.5px;">★ ${departmentToken} ★</span>
+            <span style="font-size: 8px;">PASSED</span>
+        `;
+        
+        if (imageElement && imageElement.parentNode) {
+            imageElement.parentNode.replaceChild(backupStampContainer, imageElement);
+        }
+    }
+  </script>
+</body>
+</html>

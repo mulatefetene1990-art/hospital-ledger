@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Semen HC Ledger - Create Corporate Account</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .auth-card { background: white; padding: 32px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 440px; }
+    h2 { color: #003366; border-bottom: 2px solid #003366; padding-bottom: 10px; margin-top: 0; text-align: center; }
+    .form-group { margin-bottom: 16px; position: relative; }
+    label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; color: #0b2545; }
+    input[type="text"], input[type="password"], input[type="email"], select { width: 100%; padding: 10px 44px 10px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    .btn-auth { background-color: #003366; color: white; border: none; padding: 12px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 8px; }
+    .pw-toggle { position: absolute; right: 8px; top: 36px; background: transparent; border: 0; cursor: pointer; color: #64748b; padding: 6px; border-radius: 6px; }
+    .note { font-size: 13px; color: #657482; text-align: center; margin-top: 12px; }
+    .error { color: #a33; font-size: 13px; margin-top: 8px; display: none; }
+    a { color: #003366; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="auth-card">
+    <h2>Register Account</h2>
+
+    <!-- The form expects these field names to match your Flask /register route:
+         username, password, password2, role, email (email is optional)
+    -->
+    <form method="POST" action="/register" id="registerForm" autocomplete="on" novalidate>
+      <div class="form-group">
+        <label for="username">Username Credential:</label>
+        <input id="username" name="username" type="text" required autocomplete="username" placeholder="Enter preferred username">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Secure Master Password:</label>
+        <input id="password" name="password" type="password" required autocomplete="new-password" placeholder="Enter password">
+        <button type="button" class="pw-toggle" data-toggle="password" aria-pressed="false" aria-label="Show password">Show</button>
+      </div>
+
+      <div class="form-group">
+        <label for="password2">Confirm Password:</label>
+        <input id="password2" name="password2" type="password" required autocomplete="new-password" placeholder="Re-enter password">
+        <button type="button" class="pw-toggle" data-toggle="password2" aria-pressed="false" aria-label="Show confirmation password">Show</button>
+      </div>
+
+      <div class="form-group">
+        <label for="role">Assigned Verification Authority Role:</label>
+        <select id="role" name="role" required>
+          <option value="SEC">Secretary Dept Staff (SEC)</option>
+          <option value="MED">Medical Director Office (MED)</option>
+          <option value="QA">Quality Officer Office (QA)</option>
+          <option value="HR">Human Resources Manager (HR)</option>
+          <option value="CEO">Chief Executive Officer (CEO)</option>
+          <option value="RR">Record Room Office (RR)</option>
+          <option value="VMED">Vice Medical Office (VMED)</option>
+          <option value="OUT">Outpatient Department (OUT)</option>
+          <option value="ER">Emergency Department (ER)</option>
+          <option value="INPAT">Inpatient and OR Dept (INPAT)</option>
+          <option value="FIN">Finance Department (FIN)</option>
+          <option value="PHARM">Pharmacy Office (PHARM)</option>
+          <option value="LAB">Laboratory Office (LAB)</option>
+          <option value="MNCH">MNCH Department (MNCH)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email (optional)</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+
+      <div id="pwError" class="error" role="alert" aria-live="assertive"></div>
+
+      <button type="submit" class="btn-auth">Provision Corporate Account</button>
+
+      <p class="note">
+        <a href="/login">Return to Login Portal</a>
+      </p>
+    </form>
+  </div>
+
+  <script>
+    // Show/Hide toggles for password fields
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('.pw-toggle');
+      if (!btn) return;
+      const targetId = btn.getAttribute('data-toggle');
+      const input = document.getElementById(targetId);
+      if (!input) return;
+      const isPwd = input.type === 'password';
+      input.type = isPwd ? 'text' : 'password';
+      btn.textContent = isPwd ? 'Hide' : 'Show';
+      btn.setAttribute('aria-pressed', isPwd ? 'true' : 'false');
+      btn.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
+      input.focus();
+    });
+
+    // Client-side validation to ensure passwords match before submit
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+      const p1 = document.getElementById('password').value;
+      const p2 = document.getElementById('password2').value;
+      const err = document.getElementById('pwError');
+      err.style.display = 'none';
+      if (!p1 || !p2) {
+        err.textContent = 'Please enter and confirm your password.';
+        err.style.display = 'block';
+        e.preventDefault();
+        return;
+      }
+      if (p1 !== p2) {
+        err.textContent = 'Passwords do not match.';
+        err.style.display = 'block';
+        e.preventDefault();
+        return;
+      }
+      // Optionally add strength checks here
+    });
+  </script>
+</body>
+</html>

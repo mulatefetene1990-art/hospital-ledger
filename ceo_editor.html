@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Executive Document Desk — Office of the CEO</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f6f9; margin: 40px; color: #333; }
+        .editor-wrapper { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #800020; }
+        h2 { color: #800020; border-bottom: 2px solid #800020; padding-bottom: 12px; margin-top: 0; font-size: 22px; }
+        .meta-notice { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 4px; font-size: 13.5px; font-weight: bold; margin-bottom: 25px; border: 1px solid #ffeeba; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; color: #444; }
+        input[type="text"], textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14.5px; }
+        textarea { height: 250px; resize: vertical; font-family: inherit; line-height: 1.6; }
+        .btn-panel { display: flex; gap: 15px; margin-top: 30px; }
+        .btn-submit { background-color: #800020; color: white; border: none; padding: 14px 24px; font-size: 15px; border-radius: 4px; cursor: pointer; font-weight: bold; flex-grow: 2; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-submit:hover { background-color: #600018; }
+        .btn-cancel { background-color: #666; color: white; border: none; padding: 14px 20px; font-size: 15px; border-radius: 4px; cursor: pointer; text-decoration: none; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="editor-wrapper">
+        <h2>Office of the Chief Executive Officer — Document Review Desk</h2>
+        
+        <div class="meta-notice">
+            📝 Reviewing Secretary's Draft Reference Ledger: <u>{{ memo.serial_code }}</u><br>
+            <span style="font-weight: normal; font-size: 12.5px; display: block; margin-top: 5px;">
+                You are authorized to review and modify this text. Clicking "Re-submit & Authorize Document" saves your changes and applies your official digital stamp signature instantly.
+            </span>
+        </div>
+
+        <form action="/ceo/resubmit/{{ memo.serial_code }}" method="POST">
+            
+            <div class="form-group">
+                <label>Document Subject / Matter Reference:</label>
+                <input type="text" name="subject" value="{{ memo.subject }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Memorandum Text Body Content:</label>
+                <textarea name="body" required>{{ memo.body }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Carbon Copy (CC) Routing Lines (Separated by commas):</label>
+                <input type="text" name="cc_list" value="{{ memo.cc_list }}">
+            </div>
+
+            <div class="btn-panel">
+                <a href="/view/{{ memo.serial_code }}" class="btn-cancel">Cancel and Exit</a>
+                <button type="submit" class="btn-submit">Re-submit & Authorize Document</button>
+            </div>
+            
+        </form>
+    </div>
+
+</body>
+</html>

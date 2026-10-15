@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Staging Desk — Pre-Approval Review Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 40px; color: #333; }
+        .review-box { max-width: 800px; margin: 0 auto; background: white; padding: 45px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #ca8a04; }
+        h2 { color: #003366; border-bottom: 2px solid #003366; padding-bottom: 12px; margin-top: 0; }
+        .alert-banner { background-color: #eef4f8; border-left: 4px solid #003366; padding: 15px; margin-bottom: 25px; font-size: 14px; }
+        .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        .meta-table td { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14.5px; }
+        .bold-label { font-weight: bold; color: #555; width: 25%; }
+        .body-preview { background: #fafafa; border: 1px solid #ddd; padding: 20px; border-radius: 4px; min-height: 150px; font-family: monospace; white-space: pre-wrap; font-size: 14px; margin-bottom: 30px; }
+        .btn-group { display: flex; gap: 15px; }
+        .btn { padding: 12px 24px; font-size: 14.5px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; text-decoration: none; text-align: center; text-transform: uppercase; }
+        .btn-edit { background-color: #666; color: white; }
+        .btn-finalize { background-color: #003366; color: white; flex-grow: 2; }
+    </style>
+</head>
+<body>
+
+    <div class="review-box">
+        <h2>Pre-Compilation Work Desk — Workflow Staging</h2>
+        
+        <div class="alert-banner">
+            ℹ️ <strong>Workflow Target Matrix:</strong> This layout routes directly back through the secretary validation workspace for verification checks relative to primary recipient <strong>{{ memo.recipient | e }}</strong>.
+        </div>
+
+        <table class="meta-table">
+            <tr>
+                <td class="bold-label">ORIGINATOR DEPT:</td>
+                <td>{{ memo.department | e }}</td>
+            </tr>
+            <tr>
+                <td class="bold-label">PRIMARY RECIPIENT:</td>
+                <td><mark style="background-color: #fef08a; padding: 2px 6px; border-radius: 2px;">{{ memo.recipient | e }}</mark></td>
+            </tr>
+            <tr>
+                <td class="bold-label">MATTER REFERENCE:</td>
+                <td><strong>{{ memo.subject | e }}</strong></td>
+            </tr>
+            <tr>
+                <td class="bold-label">ROUTING CC CHAIN:</td>
+                <td>{{ memo.cc_list | e if memo.cc_list else 'None Configured' }}</td>
+            </tr>
+        </table>
+
+        <div style="font-weight: bold; font-size: 14px; margin-bottom: 8px;">DOCUMENT BODY REVIEW TEXT:</div>
+        <div class="body-preview">{{ memo.body | e }}</div>
+
+        <!-- Final Decision actions to store the record into database or kick back -->
+        <!-- 📍 ENSURE THE FORM TAG HAS method="POST" DEFINED CLEARLY -->
+<form action="/generate" method="POST" style="width: 100%;">
+    
+    <!-- Core tracking metadata values kept securely -->
+    <input type="hidden" name="department" value="{{ memo.department | e }}">
+    <input type="hidden" name="recipient" value="{{ memo.recipient | e }}">
+    <input type="hidden" name="subject" value="{{ memo.subject | e }}">
+    <input type="hidden" name="body" value="{{ memo.body | e }}">
+    <input type="hidden" name="cc_list" value="{{ memo.cc_list | e }}">
+    <input type="hidden" name="date" value="{{ memo.issue_date | e }}">
+    <input type="hidden" name="auto_sign" value="true">
+
+    <div class="btn-group" style="display: flex; gap: 15px; width: 100%; margin-top: 20px;">
+        
+        <!-- BUTTON 1: Returns to edit (Must use POST) -->
+        <button type="submit" formaction="/memo/return-to-edit" class="btn" style="background-color: #ca8a04; color: white; padding: 12px 20px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; flex-grow: 1;">
+            ✏️ Send Back to Edit Form
+        </button>
+        
+        <!-- BUTTON 2: Compiles the record back into the main compiler (Must use POST) -->
+        <button type="submit" class="btn" style="background-color: #003366; color: white; padding: 12px 20px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; flex-grow: 2;">
+            💾 Confirm & Save Record (Compile)
+        </button>
+        
+    </div>
+</form>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!-- The signature/bottom section of your letter template -->
+<div class="letter-footer" style="margin-top: 50px;">
+    
+    <p>ያለፈው ክፍል / Approved By: ___________________</p>
+
+    <!-- 📌 PLACE THE NEW LAYOUT RIGHT HERE -->
+    <div style="display: flex; align-items: center; gap: 15px; margin-top: 20px;">
+        
+        <!-- Replace this with your actual image path or dynamic URL variable (like {{ draft.stamp_url }}) -->
+        <img src="{{ url_for('static', filename='images/office_stamp.png') }}" alt="Stamp" style="width: 120px; height: auto;">
+        
+        <span style="font-family: 'Nyala', 'Power Ge'ez', sans-serif; font-size: 18px; font-weight: bold;">
+            ከሰላምታ ጋር
+        </span>
+        
+    </div>
+
+</div>

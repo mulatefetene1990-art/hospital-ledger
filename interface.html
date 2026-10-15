@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Institutional Memo Control Dashboard</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 40px;
+            color: #333;
+        }
+
+        .main-layout {
+            max-width: 1250px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .form-container,
+        .history-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        h2 {
+            color: #003366;
+            border-bottom: 2px solid #003366;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        select,
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        textarea {
+            height: 130px;
+            resize: vertical;
+        }
+
+        .btn-submit {
+            background-color: #003366;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .btn-submit:hover {
+            background-color: #002244;
+        }
+
+        .btn-approve {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        .btn-approve:hover {
+            background-color: #218838;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #003366;
+            color: white;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+        }
+
+        .clickable-row:hover {
+            background-color: #eef4f8;
+        }
+
+        .flash-msg {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        #async-notification-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .live-toast {
+            background: #111827;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 6px;
+            margin-top: 10px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            font-size: 13px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            max-width: 360px;
+            word-break: break-word;
+        }
+
+        .live-toast button {
+            margin-left: auto;
+            background: transparent;
+            border: none;
+            color: #f8fafc;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .cc-checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            max-height: 120px;
+            overflow: auto;
+            border: 1px solid #e6e6e6;
+            padding: 8px;
+            border-radius: 4px;
+            background: #fff;
+        }
+
+        .person-badge {
+            display: inline-block;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #0f172a;
+        }
+
+        .date-range-filter {
+            background: #f0f4f8;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .date-range-filter h4 {
+            margin-top: 0;
+            color: #003366;
+            font-size: 14px;
+        }
+
+        .date-range-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .date-range-form input,
+        .date-range-form select {
+            width: 100%;
+        }
+
+        .date-range-form button {
+            background-color: #16a34a;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .date-range-form button:hover {
+            background-color: #15803d;
+        }
+
+        .user-greeting {
+            width: 100%;
+            max-width: 1250px;
+            margin: 0 auto 18px auto;
+            padding: 14px 20px;
+            background: #ffffff;
+            border-left: 6px solid #003366;
+            border-radius: 7px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            color: #1f2937;
+            line-height: 1.7;
+            box-sizing: border-box;
+        }
+
+        .user-greeting .greeting-line {
+            font-size: 16px;
+            font-weight: 700;
+            color: #003366;
+        }
+
+        .user-greeting .user-line {
+            margin-top: 3px;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .user-greeting .user-name {
+            color: #111827;
+            font-weight: 800;
+        }
+
+        .user-greeting .user-role {
+            color: #b91c1c;
+            font-weight: 800;
+        }
+
+        .user-greeting .role-description {
+            color: #64748b;
+            font-size: 13px;
+            margin-left: 4px;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                margin: 20px 12px;
+            }
+
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .date-range-form {
+                grid-template-columns: 1fr;
+            }
+
+            .user-greeting {
+                margin-bottom: 15px;
+                padding: 12px 14px;
+            }
+
+            .user-greeting .greeting-line {
+                font-size: 14px;
+            }
+
+            .user-greeting .user-line {
+                font-size: 13px;
+            }
+
+            .user-greeting .role-description {
+                display: block;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% set logged_in_role = session.get('role', 'USER')|upper|trim %}
+    {% set logged_in_name = session.get('display_name') or session.get('username', 'User') %}
+
+    {% if logged_in_role == 'SEC' %}
+        {% set role_description = 'Secretary Department Staff' %}
+    {% elif logged_in_role == 'PERS' %}
+        {% set role_description = 'Personnel User' %}
+    {% elif logged_in_role == 'RR' %}
+        {% set role_description = 'Record Room User' %}
+    {% elif logged_in_role == 'QA' %}
+        {% set role_description = 'Quality Department User' %}
+    {% elif logged_in_role == 'HR' %}
+        {% set role_description = 'Human Resources User' %}
+    {% elif logged_in_role == 'CEO' %}
+        {% set role_description = 'Chief Executive Officer' %}
+    {% elif logged_in_role == 'VMED' %}
+        {% set role_description = 'Vice Medical Office User' %}
+    {% elif logged_in_role == 'MED' %}
+        {% set role_description = 'Medical Office User' %}
+    {% elif logged_in_role == 'OUT' %}
+        {% set role_description = 'Outpatient Department User' %}
+    {% elif logged_in_role == 'ER' %}
+        {% set role_description = 'Emergency Department User' %}
+    {% elif logged_in_role == 'INPAT' %}
+        {% set role_description = 'Inpatient and OR Department User' %}
+    {% elif logged_in_role == 'FIN' %}
+        {% set role_description = 'Finance Department User' %}
+    {% elif logged_in_role == 'PHARM' %}
+        {% set role_description = 'Pharmacy User' %}
+    {% elif logged_in_role == 'LAB' %}
+        {% set role_description = 'Laboratory User' %}
+    {% elif logged_in_role == 'MNCH' %}
+        {% set role_description = 'MNCH Department User' %}
+    {% else %}
+        {% set role_description = 'System User' %}
+    {% endif %}
+
+    <div class="user-greeting" role="status" aria-live="polite">
+        <div class="greeting-line">
+            እንኳን ደህና መጡ፣ ክቡር/ክብርት
+        </div>
+
+        <div class="user-line">
+            <span class="user-name">
+                {{ logged_in_name }}
+            </span>
+
+            <span> — </span>
+
+            <span class="user-role">
+                {{ logged_in_role }}
+            </span>
+
+            <span class="role-description">
+                ({{ role_description }})
+            </span>
+        </div>
+    </div>
+
+    <div style="text-align: right; max-width: 1250px; margin: 0 auto 20px auto;">
+        <span style="font-size: 14px; margin-right: 15px;">
+            Profile:
+            <strong>{{ session.get('username', '') }}</strong>
+            (<code>{{ session.get('role', '') }}</code>)
+        </span>
+
+        <a href="{{ url_for('authentication_logout') }}" style="color: #cc0000; font-weight: bold; text-decoration: none;">
+            🔒 Logout
+        </a>
+        |
+        <a href="{{ url_for('register') }}" style="color: #003366; font-weight: bold; text-decoration: none;">
+            👤 Create Account
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="flash-msg {% if category == 'success' %}flash-success{% else %}flash-error{% endif %}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div id="async-notification-container" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="main-layout">
+        <div class="form-container" id="workspace-form-column">
+            {% if edit_mode and not rewrite_mode and current_user_role != 'SEC' %}
+                <div id="dynamic-review-alert-banner" style="background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-weight: bold; font-size: 13px;">
+                    🔒 <strong>Pipeline Notification:</strong> An official memorandum draft is sitting in your pipeline queue awaiting transaction commitment.
+                </div>
+
+                <h2 id="workspace-title-header">{{ departments[current_user_role].name if current_user_role in departments else 'Department' }} Queue Review</h2>
+
+                <form action="/execute-ledger-commit" method="POST">
+                    <div class="form-group">
+                        <label>Staged Routing Status Code:</label>
+                        <input type="text" value="{{ serial_code }}" readonly style="background:#f1f5f9; font-family:monospace; font-weight:bold; color:#1e293b;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>ላኪ ዲፓርትመንት (ከ):</label>
+                        <input type="text" value="{{ departments[origin_department].name if origin_department in departments else origin_department }}" readonly style="background:#f1f5f9; font-weight: bold; color: #003366;">
+                        <input type="hidden" name="origin_department" value="{{ origin_department }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>ተቀባይ ዲፓርትመንት (ለ):</label>
+                        <input type="text" value="{{ recipient }}" readonly style="background:#f1f5f9;">
+                        {% if recipient == 'PERS' and recipient_personnel %}
+                            <div style="margin-top:8px; font-size:13px; color:#334155;">
+                                <strong>Personnel:</strong>
+                                <div style="margin-top:6px;">
+                                    {% for p in recipient_personnel.split(',') %}
+                                        <span class="person-badge">{{ p.strip() }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label>ጉዳዩ:</label>
+                        <input type="text" value="{{ subject }}" readonly style="background:#f1f5f9;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>ዋናው ሰነድ ጽሑፍ :</label>
+                        <textarea readonly style="background:#f1f5f9;">{{ body }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn-approve">✍ Approve & Commit to Ledger</button>
+                </form>
+
+                <div style="margin-top: 25px; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
+                    <h4 style="color: #b91c1c; margin-top: 0; font-size: 13px; text-transform: uppercase;">❌ Request Corrections / Rewrite</h4>
+                    <form action="/reject-for-rewrite" method="POST" onsubmit="forceAbsoluteWorkspaceClose();">
+                        <div class="form-group">
+                            <label style="color: #b91c1c;">Specify Correction Instructions for Secretary:</label>
+                            <textarea name="rejection_notes" required placeholder="Describe what fields or sentences need to be modified..." style="border-color: #fca5a5; height: 80px;"></textarea>
+                        </div>
+                        <button type="submit" style="background-color: #dc2626; color: white; border: none; padding: 10px; font-size: 14px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; text-transform: uppercase;">
+                            ⚠️ Reject & Send for Rewrite
+                        </button>
+                    </form>
+                </div>
+
+            {% else %}
+                {% if current_user_role != 'SEC' %}
+                    <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+                        <h3 style="color: #003366; margin-top: 0;">Queue Cleared</h3>
+                        <p style="font-size: 14px; line-height: 1.5;">
+                            There are currently no pending memorandum drafts awaiting authorization clearance for your department channel.
+                        </p>
+                    </div>
+                {% else %}
+                    {% if rewrite_mode %}
+                        <div style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 13px;">
+                            🚨 <strong>Rewrite Requested by {{ rejected_by }} Department:</strong><br>
+                            <p style="margin: 5px 0; font-weight: bold; background: white; padding: 8px; border-radius: 4px; border-left: 4px solid #dc2626;">
+                                "{{ rejection_notes }}"
+                            </p>
+                            Please adjust the text fields and re-route the document below.
+                        </div>
+                    {% endif %}
+
+                   <form action="/stage-draft-route" method="POST" id="secretary-form">
+    <div class="form-group" id="datetime-section-wrapper" style="position: relative; margin-bottom: 18px;">
+        <label style="display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; color: #003366;">Date & Time Information</label>
+
+        <div style="position: relative; display: flex; align-items: center; margin-bottom: 10px;">
+            <span style="position: absolute; left: 12px; font-size: 16px; pointer-events: none; color: #003366;">📅</span>
+            <input type="text" id="ethiopian_date_display" readonly placeholder="Pick Ethiopian Date..." onclick="toggleEthCalendar()" style="width: 100%; padding: 10px 10px 10px 38px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; cursor: pointer; background-color: #fff; font-weight: 600;">
+        </div>
+
+        <input type="hidden" id="memo_input_date" name="date" required>
+        <input type="hidden" id="eth_date_str_hidden" name="eth_date_str" required>
+
+        <div id="ethiopian-calendar-popup" style="display: none; position: absolute; top: 45px; left: 0; width: 320px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 9999; padding: 12px; box-sizing: border-box;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                <button type="button" onclick="changeEthMonth(-1)" style="background:#003366; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-weight:bold; color:#fff;">◀</button>
+                <div style="font-weight:bold; color:#003366; font-size:14px;">
+                    <span id="calendar-eth-month-lbl">Meskerem</span>
+                    <span id="calendar-eth-year-lbl">2019</span>
+                </div>
+                <button type="button" onclick="changeEthMonth(1)" style="background:#003366; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-weight:bold; color:#fff;">▶</button>
+            </div>
+            <div id="eth-calendar-days-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:4px; text-align:center; font-size:13px;"></div>
+        </div>
+    </div>
+
+
+                        <script>
+                            const ethMonthsArray = ['Meskerem', 'Tikimet', 'Hidar', 'Tahsas', 'Ter', 'Yekatit', 'Megabit', 'Miazia', 'Genbot', 'Sene', 'Hamle', 'Nehasse', 'Pagume'];
+    let currentPickerYear = 2019;
+    let currentPickerMonth = 1;
+
+    // 🔴 Dynamic Target Tracking parameters for Real-Time Ethiopian Today:
+    // Today's current state translates dynamically to Meskerem 16, 2019
+    const actualTodayYear = 2019;
+    const actualTodayMonth = 1; // 1 represents Meskerem
+    const actualTodayDay = 16;  
+
+    function toggleEthCalendar() {
+        const popup = document.getElementById('ethiopian-calendar-popup');
+        if (popup.style.display === 'none' || popup.style.display === '') {
+            popup.style.display = 'block';
+            renderEthCalendarGrid();
+        } else {
+            popup.style.display = 'none';
+        }
+    }
+
+    function changeEthMonth(step) {
+        currentPickerMonth += step;
+        if (currentPickerMonth > 13) {
+            currentPickerMonth = 1;
+            currentPickerYear += 1;
+        } else if (currentPickerMonth < 1) {
+            currentPickerMonth = 13;
+            currentPickerYear -= 1;
+        }
+        renderEthCalendarGrid();
+    }
+
+    function renderEthCalendarGrid() {
+        document.getElementById('calendar-eth-month-lbl').innerText = ethMonthsArray[currentPickerMonth - 1];
+        document.getElementById('calendar-eth-year-lbl').innerText = currentPickerYear;
+
+        const daysGrid = document.getElementById('eth-calendar-days-grid');
+        daysGrid.innerHTML = '';
+
+        let maxDays = 30;
+        if (currentPickerMonth === 13) {
+            maxDays = (currentPickerYear % 4 === 3) ? 6 : 5;
+        }
+
+        for (let day = 1; day <= maxDays; day++) {
+            const btn = document.createElement('div');
+            btn.style.padding = '6px 0';
+            btn.style.cursor = 'pointer';
+            btn.style.borderRadius = '4px';
+            btn.style.fontWeight = '600';
+            btn.style.display = 'flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            btn.style.height = '28px';
+
+            // 🛠️ FIX CHECK: Check if this grid position matches the designated Today context
+            if (currentPickerYear === actualTodayYear && currentPickerMonth === actualTodayMonth && day === actualTodayDay) {
+                // Render high-contrast circular badge frame
+                const innerCircle = document.createElement('span');
+                innerCircle.innerText = day;
+                innerCircle.style.background = '#ef4444'; // High-visibility Alert Red
+                innerCircle.style.color = '#ffffff';
+                innerCircle.style.borderRadius = '50%';
+                innerCircle.style.width = '28px';
+                innerCircle.style.height = '28px';
+                innerCircle.style.display = 'inline-flex';
+                innerCircle.style.alignItems = 'center';
+                innerCircle.style.justifyContent = 'center';
+                innerCircle.style.boxShadow = '0px 2px 6px rgba(239, 68, 68, 0.4)';
+                btn.appendChild(innerCircle);
+            } else {
+                btn.innerText = day;
+                btn.style.color = '#1e293b';
+            }
+
+            btn.onmouseover = function () {
+                const targetText = this.querySelector('span') || this;
+                this.style.background = '#003366';
+                targetText.style.color = '#ffffff';
+            };
+            btn.onmouseout = function () {
+                this.style.background = 'transparent';
+                const innerSpan = this.querySelector('span');
+                if (innerSpan) {
+                    innerSpan.style.color = '#ffffff'; // Keep circle white text intact
+                } else {
+                    this.style.color = '#1e293b';
+                }
+            };
+            btn.onclick = function () {
+                selectEthPickerDate(currentPickerYear, currentPickerMonth, day);
+            };
+            daysGrid.appendChild(btn);
+        }
+    }
+
+    function selectEthPickerDate(selectedYear, selectedMonth, selectedDay) {
+        const formattedDisplayStr = `${ethMonthsArray[selectedMonth - 1]} ${selectedDay}, ${selectedYear}`;
+        document.getElementById('ethiopian_date_display').value = formattedDisplayStr;
+        document.getElementById('eth_date_str_hidden').value = formattedDisplayStr;
+
+        const fallbackGregorianYear = selectedYear + 7;
+        const fallbackIsoString = `${fallbackGregorianYear}-09-11`;
+        document.getElementById('memo_input_date').value = fallbackIsoString;
+
+        document.getElementById('ethiopian-calendar-popup').style.display = 'none';
+    }
+
+    document.addEventListener('click', function (event) {
+        const popup = document.getElementById('ethiopian-calendar-popup');
+        const field = document.getElementById('ethiopian_date_display');
+        if (popup && !popup.contains(event.target) && event.target !== field) {
+            popup.style.display = 'none';
+        }
+    });
+
+    document.getElementById('secretary-form').addEventListener('submit', function (event) {
+        const dateDisplay = document.getElementById('ethiopian_date_display');
+        const dateHidden = document.getElementById('memo_input_date');
+        const ethDateHidden = document.getElementById('eth_date_str_hidden');
+    });
+                        </script>
+
+                        <div class="form-group">
+                            <label>ላኪ ዲፓርትመንት (ከ):</label>
+                            <select name="origin_department" required>
+                                <option value="">-- SELECT ORIGIN NODE --</option>
+                                {% for code, info in departments.items() %}
+                                    <option value="{{ code }}" {% if origin_department == code %}selected{% endif %}>{{ info.name }} ({{ code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>ተቀባይ ዲፓርትመንት (ለ):</label>
+                            <select name="recipient" id="recipient-select" required>
+                                <option value="">-- SELECT TARGET NODE --</option>
+                                {% for code, info in departments.items() %}
+                                    {% if code != 'SEC' %}
+                                        <option value="{{ code }}" {% if recipient == code %}selected{% endif %}>{{ info.name }} ({{ code }})</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="personnel-names-container" class="form-group" style="display: {% if recipient == 'PERS' %}block{% else %}none{% endif %};">
+                            <label>Registered Personnel Recipients:</label>
+
+                            <div style="max-height: 220px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; background: #f8fafc;">
+                                {% if personnel_accounts %}
+                                    {% for person in personnel_accounts %}
+                                        <label style="display: flex; align-items: center; gap: 10px; padding: 8px; margin-bottom: 5px; background: white; border: 1px solid #e5e7eb; border-radius: 5px; cursor: pointer;">
+                                            <input type="checkbox" name="personnel_account_ids" value="{{ person.id }}">
+                                            <span>
+                                                <strong>{{ person.display_name }}</strong>
+                                                <small style="color:#64748b;">(@{{ person.username }})</small>
+                                            </span>
+                                        </label>
+                                    {% endfor %}
+                                {% else %}
+                                    <p style="color:#b91c1c; font-size:13px;">No registered personnel accounts found.</p>
+                                {% endif %}
+                            </div>
+
+                            <small style="display:block; margin-top:6px; color:#64748b;">
+                                Select one or more registered personnel recipients.
+                            </small>
+                        </div>
+
+                     
+                        <div class="form-group">
+                            <label>ጉዳዩ :</label>
+                            <input type="text" name="subject" value="{{ subject if subject else '' }}" required placeholder="Subject heading text metadata">
+                        </div>
+
+                        <div class="form-group">
+                            <label>ዋናው ሰነድ ጽሑፍ :</label>
+                            <textarea name="body" required placeholder="Type the core operational text entry contents...">{{ body if body else '' }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>ግልባጭ :</label>
+                            {% set cc_selected = cc_list.split(',') if cc_list else [] %}
+                            <div class="cc-checkbox-grid">
+                                {% for code, info in departments.items() %}
+                                    <label style="font-weight:normal; font-size:12px; display:flex; align-items:center; gap:8px;">
+                                        <input type="checkbox" name="cc_list" value="{{ code }}" {% if code in cc_selected %}checked{% endif %}>
+                                        {{ info.name }} ({{ code }})
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {% if rewrite_mode %}
+                            <button type="submit" class="btn-submit" style="background-color: #003366; color: white;">Route to Target Department</button>
+                        {% elif outbound_draft %}
+                            <button type="submit" class="btn-submit" disabled style="background-color: #94a3b8; cursor: not-allowed; opacity: 0.65;">Workspace Locked (Pending Review)</button>
+                        {% else %}
+                            <button type="submit" class="btn-submit">Route to Target Department</button>
+                        {% endif %}
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="history-container">
+            <h2>
+                {% if current_user_role in departments %}
+                    🔒 {{ departments[current_user_role].name }} Ledger Archive Log
+                {% else %}
+                    🔒 Approved Departmental Ledger Archive Log
+                {% endif %}
+            </h2>
+
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+                <h4 style="margin-top: 0; color: #003366; font-size: 14px;">🔍 Find Letter by Serial Number</h4>
+
+                <form action="/search-memo" method="POST" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end;">
+                    <div>
+                        <label style="font-size: 12px; font-weight: bold; color: #1f2937; display: block; margin-bottom: 4px;">Serial Code:</label>
+                        <input type="text" name="serial_code" placeholder="e.g., MEMO-RR-000001" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                    </div>
+
+                    <button type="submit" style="background-color: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase;">
+                        🔍 Search
+                    </button>
+                </form>
+            </div>
+
+            {% if current_user_role in ['RR', 'RECORD', 'RECORD_ROOM'] %}
+            <div class="date-range-filter">
+                <h4>📅 Download Memos by Date Range</h4>
+             <!-- 📌 COMPLETE HIGH-CONTRAST RECORD ROOM DOWNLOAD FORM -->
+<form action="/download-rr-memos" method="POST" id="record-room-download-form" style="max-width: 400px; padding: 20px; border: 1px solid #cbd5e1; border-radius: 8px; background-color: #ffffff; font-family: system-ui, sans-serif; position: relative;">
+    <label style="display: block; margin-bottom: 12px; font-weight: bold; font-size: 16px; color: #003366;">📅 Download Memos by Date Range</label>
+
+    <!-- 1. Start Date Ethiopian Picker Wrapper -->
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 600; color: #475569;">From Date (Ethiopian):</label>
+        <div style="position: relative; display: flex; align-items: center;">
+            <span style="position: absolute; left: 12px; font-size: 16px; pointer-events: none; color: #003366;">📅</span>
+            <input type="text" id="rr_from_date_display" readonly placeholder="Pick Start Ethiopian Date..." onclick="toggleRRCalendar('from')" style="width: 100%; padding: 10px 10px 10px 38px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600; background-color: #fff;">
+        </div>
+        <!-- Hidden input field submitted to backend -->
+        <input type="hidden" id="from_date" name="from_date" required>
+    </div>
+
+    <!-- 2. End Date Ethiopian Picker Wrapper -->
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 600; color: #475569;">To Date (Ethiopian):</label>
+        <div style="position: relative; display: flex; align-items: center;">
+            <span style="position: absolute; left: 12px; font-size: 16px; pointer-events: none; color: #003366;">📅</span>
+            <input type="text" id="rr_to_date_display" readonly placeholder="Pick End Ethiopian Date..." onclick="toggleRRCalendar('to')" style="width: 100%; padding: 10px 10px 10px 38px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600; background-color: #fff;">
+        </div>
+        <!-- Hidden input field submitted to backend -->
+        <input type="hidden" id="to_date" name="to_date" required>
+    </div>
+
+    <!-- 3. Export Format Selector -->
+    <div class="form-group" style="margin-bottom: 18px;">
+        <label style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 600; color: #475569;">Export Format:</label>
+        <select name="format" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: white; font-weight: 600; color: #334155;">
+            <option value="csv">CSV Spreadsheet</option>
+            <option value="pdf">PDF Document</option>
+        </select>
+    </div>
+
+    <!-- 4. Shared Calendar Popup Container -->
+    <div id="rr-calendar-popup" style="display: none; position: absolute; width: 300px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 9999; padding: 12px; box-sizing: border-box;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+            <button type="button" onclick="changeRRMonth(-1)" style="background:#003366; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-weight:bold; color:#fff;">◀</button>
+            <div style="font-weight:bold; color:#003366; font-size:14px;">
+                <span id="rr-month-lbl">Meskerem</span>
+                <span id="rr-year-lbl">2019</span>
+            </div>
+            <button type="button" onclick="changeRRMonth(1)" style="background:#003366; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-weight:bold; color:#fff;">▶</button>
+        </div>
+        <div id="rr-calendar-days-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:4px; text-align:center; font-size:13px;"></div>
+    </div>
+
+    <button type="submit" style="width:100%; background:#003366; color:#fff; padding:12px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size:14px;">
+        📥 Download Report
+    </button>
+</form>
+
+<!-- 📌 DYNAMIC ETHIOPIAN PICKER MOTOR CONTROLLER ENGINE -->
+<script>
+    const rrMonthsArray = ['Meskerem', 'Tikimet', 'Hidar', 'Tahsas', 'Ter', 'Yekatit', 'Megabit', 'Miazia', 'Genbot', 'Sene', 'Hamle', 'Nehasse', 'Pagume'];
+    let rrPickerYear = 2019;
+    let rrPickerMonth = 1;
+    let currentTargetField = 'from'; // Controls target injection mapping
+
+    // Real-Time highlighting for context today (Meskerem 16, 2019)
+    const rrTodayYear = 2019;
+    const rrTodayMonth = 1;
+    const rrTodayDay = 16;
+
+    function toggleRRCalendar(target) {
+        currentTargetField = target;
+        const popup = document.getElementById('rr-calendar-popup');
+        const inputField = document.getElementById(target === 'from' ? 'rr_from_date_display' : 'rr_to_date_display');
+        
+        // Dynamic absolute stacking offsets positioning
+        popup.style.top = (inputField.offsetTop + inputField.offsetHeight + 5) + 'px';
+        popup.style.left = inputField.offsetLeft + 'px';
+        
+        if (popup.style.display === 'none' || popup.style.display === '') {
+            popup.style.display = 'block';
+            renderRRCalendarGrid();
+        } else {
+            popup.style.display = 'none';
+        }
+    }
+
+    function changeRRMonth(step) {
+        rrPickerMonth += step;
+        if (rrPickerMonth > 13) {
+            rrPickerMonth = 1;
+            rrPickerYear += 1;
+        } else if (rrPickerMonth < 1) {
+            rrPickerMonth = 13;
+            rrPickerYear -= 1;
+        }
+        renderRRCalendarGrid();
+    }
+
+    function renderRRCalendarGrid() {
+        document.getElementById('rr-month-lbl').innerText = rrMonthsArray[rrPickerMonth - 1];
+        document.getElementById('rr-year-lbl').innerText = rrPickerYear;
+
+        const daysGrid = document.getElementById('rr-calendar-days-grid');
+        daysGrid.innerHTML = '';
+
+        let maxDays = 30;
+        if (rrPickerMonth === 13) {
+            maxDays = (rrPickerYear % 4 === 3) ? 6 : 5;
+        }
+
+        for (let day = 1; day <= maxDays; day++) {
+            const btn = document.createElement('div');
+            btn.style.padding = '6px 0';
+            btn.style.cursor = 'pointer';
+            btn.style.borderRadius = '4px';
+            btn.style.fontWeight = '600';
+            btn.style.display = 'flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            btn.style.height = '28px';
+
+            // 🔴 HIGHLIGHT TODAY: Draw circular highlight around today's Ethiopian date
+            if (rrPickerYear === rrTodayYear && rrPickerMonth === rrTodayMonth && day === rrTodayDay) {
+                const innerCircle = document.createElement('span');
+                innerCircle.innerText = day;
+                innerCircle.style.background = '#ef4444'; // Red Highlight Circle
+                innerCircle.style.color = '#ffffff';
+                innerCircle.style.borderRadius = '50%';
+                innerCircle.style.width = '26px';
+                innerCircle.style.height = '26px';
+                innerCircle.style.display = 'inline-flex';
+                innerCircle.style.alignItems = 'center';
+                innerCircle.style.justifyContent = 'center';
+                innerCircle.style.boxShadow = '0px 2px 5px rgba(239, 68, 68, 0.4)';
+                btn.appendChild(innerCircle);
+            } else {
+                btn.innerText = day;
+                btn.style.color = '#1e293b';
+            }
+
+            btn.onmouseover = function () {
+                const textNode = this.querySelector('span') || this;
+                this.style.background = '#003366';
+                textNode.style.color = '#ffffff';
+            };
+            btn.onmouseout = function () {
+                this.style.background = 'transparent';
+                const innerSpan = this.querySelector('span');
+                if (innerSpan) {
+                    innerSpan.style.color = '#ffffff';
+                } else {
+                    this.style.color = '#1e293b';
+                }
+            };
+            btn.onclick = function () {
+                selectRRPickerDate(rrPickerYear, rrPickerMonth, day);
+            };
+            daysGrid.appendChild(btn);
+        }
+    }
+
+    function selectRRPickerDate(selectedYear, selectedMonth, selectedDay) {
+        const formattedDisplayStr = `${rrMonthsArray[selectedMonth - 1]} ${selectedDay}, ${selectedYear}`;
+        
+        if (currentTargetField === 'from') {
+            document.getElementById('rr_from_date_display').value = formattedDisplayStr;
+            document.getElementById('from_date').value = formattedDisplayStr; // Maps to your python handler string
+        } else {
+            document.getElementById('rr_to_date_display').value = formattedDisplayStr;
+            document.getElementById('to_date').value = formattedDisplayStr;
+        }
+
+        document.getElementById('rr-calendar-popup').style.display = 'none';
+    }
+
+    // Safely intercepts out-of-bounds context close clicks
+    document.addEventListener('click', function (event) {
+        const popup = document.getElementById('rr-calendar-popup');
+        const fieldFrom = document.getElementById('rr_from_date_display');
+        const fieldTo = document.getElementById('rr_to_date_display');
+        if (popup && !popup.contains(event.target) && event.target !== fieldFrom && event.target !== fieldTo) {
+            popup.style.display = 'none';
+        }
+    });
+</script>
+
+
+            </div>
+            {% endif %}
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Serial Code</th>
+                        <th>Date of Issue</th>
+                        <th>Origin Dept</th>
+                        <th>Target Dept</th>
+                        <th>Subject Line</th>
+                        <th>CC Members</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if history %}
+                        {% for row in history %}
+                        <tr class="clickable-row" onclick="window.location.href='/view-memo/{{ row.serial_code }}'">
+                            <td><code>{{ row.serial_code }}</code></td>
+                            <td>{{ row.issue_date }}</td>
+                            <td>
+                                <strong>
+                                    {% if row.origin_department in departments %}
+                                        {{ departments[row.origin_department].name }} ({{ row.origin_department }})
+                                    {% else %}
+                                        {{ row.origin_department if row.origin_department else 'N/A' }}
+                                    {% endif %}
+                                </strong>
+                            </td>
+                            <td>
+                                <strong>
+                                    {% if row.recipient in departments %}
+                                        {{ departments[row.recipient].name }} ({{ row.recipient }})
+                                    {% else %}
+                                        {{ row.recipient if row.recipient else 'N/A' }}
+                                    {% endif %}
+                                </strong>
+                            </td>
+                            <td>{{ row.subject }}</td>
+                            <td>
+                                {% if row.cc_list %}
+                                    {% for cc in row.cc_list.split(',') %}
+                                        {% if cc.strip() %}
+                                            <span class="person-badge">{{ cc.strip() }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="color:#94a3b8; font-style:italic;">None</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if row.approved_by_hr == 1 %}
+                                    <span style="color: #16a34a; font-weight: bold; background-color: #dcfce7; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid #bbf7d0;">✔ Approved</span>
+                                {% else %}
+                                    <span style="color: #ea580c; font-weight: bold; background-color: #ffedd5; padding: 3px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; border: 1px solid #fed7aa;">⏳ Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: #666; padding: 30px; font-weight: bold; font-style: italic; background-color: #f8fafc;">
+                                📭 No verified transactions or approved memorandum letters currently recorded inside the persistent ledger matrix.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        const CURRENT_USER_ROLE = {{ current_user_role|tojson }};
+        const CURRENT_USERNAME = {{ session.get('username')|tojson }};
+        const socket = io();
+
+        function createToast(sender, targetDept, subject) {
+            const container = document.getElementById('async-notification-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'live-toast';
+
+            const icon = document.createElement('span');
+            icon.textContent = '📬';
+            toast.appendChild(icon);
+
+            const content = document.createElement('div');
+            content.style.marginLeft = '6px';
+            content.style.flex = '1';
+            const strong = document.createElement('strong');
+            strong.textContent = sender || 'System';
+            content.appendChild(strong);
+
+            const text = document.createElement('span');
+            text.style.marginLeft = '6px';
+            text.textContent = ` routed a draft to ${targetDept || 'Unknown'}: "${subject || ''}"`;
+            content.appendChild(text);
+
+            toast.appendChild(content);
+
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '✕';
+            closeBtn.onclick = () => toast.remove();
+            toast.appendChild(closeBtn);
+
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 6000);
+        }
+
+        socket.on('draft_staged_alert', function(data) {
+            createToast(data.sender, data.target_department, data.subject);
+            if (CURRENT_USER_ROLE === data.target_department || (CURRENT_USER_ROLE === 'SEC' && data.target_department === 'SEC')) {
+                window.location.reload();
+            }
+        });
+
+        socket.on('ledger_committed_broadcast', function(data) {
+            if (CURRENT_USER_ROLE === 'SEC' || CURRENT_USER_ROLE === data.recipient) {
+                const serialEl = document.getElementById('stamp-alert-serial');
+                const subjectEl = document.getElementById('stamp-alert-subject');
+                const recipientEl = document.getElementById('stamp-alert-recipient');
+                if (serialEl) serialEl.textContent = data.serial_code || 'N/A';
+                if (subjectEl) subjectEl.textContent = data.subject || 'N/A';
+                if (recipientEl) recipientEl.textContent = data.recipient || 'N/A';
+                const overlay = document.getElementById('secretary-approved-stamp-overlay');
+                if (overlay) overlay.style.display = 'flex';
+            }
+        });
+
+        function closeStampModal() {
+            const overlay = document.getElementById('secretary-approved-stamp-overlay');
+            if (overlay) overlay.style.display = 'none';
+            window.location.reload();
+        }
+
+        (function() {
+            const recipientSelect = document.getElementById('recipient-select');
+            const personnelContainer = document.getElementById('personnel-names-container');
+
+            if (!recipientSelect || !personnelContainer) return;
+
+            recipientSelect.addEventListener('change', function(e) {
+                if (e.target.value === 'PERS') {
+                    personnelContainer.style.display = 'block';
+                } else {
+                    personnelContainer.style.display = 'none';
+                }
+            });
+        })();
+
+        function forceAbsoluteWorkspaceClose() {
+            const column = document.getElementById('workspace-form-column');
+            if (column) {
+                column.style.opacity = '0.45';
+                column.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    column.style.opacity = '';
+                    column.style.pointerEvents = '';
+                }, 1200);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Login</title>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:30px;background:#f4f6f9}
+    .box{max-width:420px;margin:0 auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+    label{display:block;margin:8px 0 6px;font-weight:700}
+    input{width:100%;padding:10px;border:1px solid #ccc;border-radius:6px}
+    button{margin-top:14px;padding:10px 14px;border-radius:6px;border:0;background:#003366;color:#fff;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Login</h2>
+    <form action="/login" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>Username</label>
+      <input name="username" type="text" required>
+      <label>Password</label>
+      <input name="password" type="password" required>
+      <button type="submit">Log in</button>
+    </form>
+    <p style="margin-top:10px;"><a href="/forgot-password">Forgot password?</a> | <a href="/register">Register</a></p>
+  </div>
+</body>
+</html>

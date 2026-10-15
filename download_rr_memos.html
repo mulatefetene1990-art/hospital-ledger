@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Download RR Approved Memos</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 40px auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="date"] { padding: 8px; font-size: 14px; }
+        button { background: #003366; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #002244; }
+        .filter-section { background: #f4f6f9; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h2>📥 Download Approved Memos (Record Room)</h2>
+    
+    <div class="filter-section">
+        <form method="POST" action="/download-rr-approved">
+            <div class="form-group">
+                <label for="from_date">From Date:</label>
+                <input type="date" id="from_date" name="from_date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="to_date">To Date:</label>
+                <input type="date" id="to_date" name="to_date" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Export Format:</label>
+                <select name="format">
+                    <option value="pdf">PDF (One file per memo)</option>
+                    <option value="csv">CSV (Spreadsheet)</option>
+                    <option value="zip">ZIP (All PDFs bundled)</option>
+                </select>
+            </div>
+            
+            <button type="submit">📥 Download Memos</button>
+        </form>
+    </div>
+    
+    <p><a href="/">← Back to Dashboard</a></p>
+</body>
+</html>
