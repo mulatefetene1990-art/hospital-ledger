@@ -132,14 +132,7 @@ def ethiopian_to_gregorian_string(eth_date_str):
 # ==========================================================
 # Config
 # ==========================================================
-import os
-
-# This finds the directory where app.py lives automatically
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'hospital_ledger.db')
-
-print(f"Using DB_PATH = {DB_PATH}")
-
+DB_PATH = os.environ.get("DB_PATH", "hospital_ledger.db")
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-placeholder")
 SECURITY_PASSWORD_SALT = os.environ.get("SECURITY_PASSWORD_SALT", "dev-password-salt")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -727,7 +720,6 @@ def stage_draft_route():
 @app.route("/execute-ledger-commit", methods=["POST"])
 def execute_ledger_commit():
     if "username" not in session:
-         return redirect('/login')
         return redirect("/")
 
     user_role = session.get("role", "SEC")
