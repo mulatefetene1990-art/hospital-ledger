@@ -7,8 +7,16 @@ import sqlite3
 import datetime
 import shutil
 import csv
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'hospital_ledger.db')
+
 from datetime import datetime as _dt
 from io import StringIO
+app = Flask(__name__)
+# Add this line if it is missing or blank
+app.secret_key = os.environ.get('SECRET_KEY', 'a_secure_fallback_development_key_123')
 
 import requests
 
