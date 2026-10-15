@@ -727,6 +727,7 @@ def stage_draft_route():
 @app.route("/execute-ledger-commit", methods=["POST"])
 def execute_ledger_commit():
     if "username" not in session:
+         return redirect('/login')
         return redirect("/")
 
     user_role = session.get("role", "SEC")
